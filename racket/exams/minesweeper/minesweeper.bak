@@ -1,0 +1,15 @@
+#lang racket
+; for testing
+(define test-board
+  (map string->list (string-split ".*..\n..*.\n**..\n...*\n*...")))
+
+; for converting ints to chars.
+(define (int->digit i) (integer->char (+ 48 i)))
+
+(let* ((input-string (port->lines))
+        ; implement parsing of board/sweep for mines 
+        ; assuming counted-board contins a list of list of chars
+       (sn (map list->string counted-board)))
+  (for ((l sn))
+    (display l)
+    (newline)))

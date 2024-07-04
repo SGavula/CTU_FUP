@@ -1,0 +1,162 @@
+#lang racket
+
+; Define the environment structure to hold variable and function definitions
+(define env (make-hash))
+
+; A helper to add definitions to the environment
+(define (define-var name value)
+  (hash-set! env name value))
+
+; Evaluate numeric expressions
+
+(define (eval-num-exp env)
+  (cond
+    [(number? exp) exp]
+    [(symbol? exp) (hash-ref env exp)]
+    [(list? exp) 
+     (let ([op (car exp)]
+           [args (map eval-num-exp (cdr exp))])
+       (case op
+         [(+) (apply + args)]
+         [(-) (apply - args)]
+         [(*) (apply * args)]
+         [(/) (apply / args)]
+         [(floor) (floor (car args))]
+         [(cos) (cos (car args))]
+         [(sin) (sin (car args))]
+         [else (error "Unknown numeric operation")]))]
+    [else (error "Invalid numeric expression")]))
+
+; Evaluate boolean expressions
+(define (eval-bool-exp exp)
+  (let ([op (car exp)]
+        [args (map eval-num-exp (cdr exp))])
+    (case op
+      [(=) (= (first args) (second args))]
+      [(<) (< (first args) (second args))]
+      [(>) (> (first args) (second args))]
+      [else (error "Unknown boolean operation")])))
+
+; Evaluate applications (SVG operations and function calls)
+(define (eval-application app)
+  (let ([op (car app)]
+        ; [args (map eval-arg (cdr app))]
+        [args (cdr app)]
+        )
+    (case op
+      [(circle) (format "<circle cx='~a' cy='~a' r='~a' style='~a'/>" (list-ref args 0) (list-ref args 1) (list-ref args 2) (list-ref args 3))]
+      [(rect) (format "<rect x='~a' y='~a' width='~a' height='~a' style='~a'/>" (list-ref args 0) (list-ref args 1) (list-ref args 2) (list-ref args 3))]
+      [(line) (format "<line x1='~a' y1='~a' x2='~a' y2='~a' style='~a'/>" (list-ref args 0) (list-ref args 1) (list-ref args 2) (list-ref args 3))]
+      [else
+       (let ([fun (hash-ref env op)])
+         (if fun
+             (let* ([params (car fun)]
+                    [body (cdr fun)]
+                    [local-env (make-hash)])
+               ; Populate local-env with argument bindings
+               (for-each (lambda (param arg) (hash-set! local-env param arg))
+                         params
+                         args)
+               (for ([key (hash-keys local-env)])   (printf "Key: ~a, Value: ~a\n" key (hash-ref local-env key)))
+               ; Evaluate the function body in the context of local-env
+               ; Placeholder for evaluating the body goes here
+               (eval-body body local-env)
+               )
+             (error "Function not defined: ~a" op)))])))
+
+
+; Evaluates an expression in the given environment
+
+(define (evaluate-expression expr env)
+  (cond
+    ; Check if the expression is a number (literal value)
+    [(number? expr) expr]
+    ; Check if the expression is a string (for styles, etc.)
+    [(string? expr) expr]
+    ; Check if the expression is a symbol, which could be a variable or constant name
+    [(symbol? expr) (hash-ref env expr (error "Undefined symbol: ~a" expr))]
+    ; Handle arithmetic and boolean operations
+    [(list? expr)
+     (let ([op (car expr)])
+       (case op
+         ; SVG operations (circle, rect, line) are handled in eval-application
+         [(circle rect line) (eval-application expr env)]
+         ; Arithmetic operations
+         [(+ - * / floor cos sin) (eval-num-exp expr env)]
+         ; Boolean operations
+         [(= < >) (eval-bool-exp expr)]
+         ; if expression
+         [(if) (evaluate-if expr env)]
+         ; when expression
+         [(when) (evaluate-when expr env)]
+         ; Assume it's a function call if none of the above match
+         [else (eval-application expr env)]))]
+    [else (error "Unknown expression type")]))
+
+
+; Placeholder for `evaluate-if` function
+
+(define (evaluate-if expr env)
+  (let* ([test-expr (cadr expr)]
+         [true-expr (caddr expr)]
+         [false-expr (cadddr expr)]
+         [test-result (evaluate-expression test-expr env)])
+    (if test-result
+        (evaluate-expression true-expr env)
+        (evaluate-expression false-expr env))))
+
+; Placeholder for `evaluate-when` function
+(define (evaluate-when expr env)
+  (let ([test-expr (cadr expr)])
+    (when (evaluate-expression test-expr env)
+      (for-each (lambda (e) (evaluate-expression e env))
+                (cddr expr)))))
+
+; You might need to adjust eval-num-exp and eval-bool-exp to work with the `env` parameter if they aren't already
+
+; Placeholder function for evaluating the body of a function
+(define (eval-body body env)
+  ; Assuming 'body' is a list of expressions, evaluate each in order
+  ; This is a simplification; you'll need to handle the actual evaluation logic
+  (for-each (lambda (expr) (evaluate-expression expr env)) body))
+
+#|
+; Evaluate arguments
+(define (eval-arg arg)
+  (cond
+    [(string? arg) arg]
+    [(number? arg) arg]
+    [(symbol? arg) (if (string? (hash-ref env arg false))
+                       (hash-ref env arg)
+                       (eval-num-exp arg))]
+    [else (error "Invalid argument type")]))
+|#
+
+; Main interpreter function
+(define (execute width height prg expr)
+  (for-each process-definition prg)
+  (string-append "<svg width=\"" (number->string width) "\" height=\"" (number->string height) "\""
+                 (eval-application expr) 
+                 "</svg>"))
+
+; Process each definition and add it to the environment
+(define (process-definition line)
+  (match line
+    [(list 'define (cons name params) body) (define-var name (cons params (list body)))]
+    [(list 'define name value) (define-var name value)]))
+
+
+; Placeholder for executing your SVG language program
+; (execute 400 400 your-program-here your-expression-here)
+
+(define test2
+  '((define STYLE "fill:red;opacity:0.2;stroke:red;stroke-width:3")
+    (define START 195)
+    (define END 10)
+    (define (circles x r)
+      (when (> r END)
+        (circle x 200 r STYLE)
+        (circles (+ x (floor (/ r 2))) (floor (/ r 2)))))))
+
+(display (execute 400 400 test2 '(circles 200 START)))
+(for ([key (hash-keys env)])   (printf "Key: ~a, Value: ~a\n" key (hash-ref env key)))

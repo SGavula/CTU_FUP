@@ -1,0 +1,8 @@
+#lang racket
+(define (nats n)
+  (stream-cons n (nats (+ n 2))))
+
+(define (add-stream n)
+  (stream-cons n (add-stream (add1 n))))
+
+(define ones (stream-cons 1 ones))

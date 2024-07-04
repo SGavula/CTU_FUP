@@ -1,0 +1,5 @@
+#lang racket
+
+(define chars " .,:;ox%#@")
+(define mat '((90.0 150.0) (180.0 225.0)))
+

@@ -1,0 +1,22 @@
+#lang racket
+
+(provide find-path
+         common-ancestor
+         (struct-out node)
+         (struct-out leaf))
+
+(struct node (val left right) #:transparent)
+(struct leaf (val) #:transparent)
+
+(define tree (node 1 (node 2 (leaf 5) (leaf 6))
+                     (node 3 (leaf 4) (leaf 7))))
+
+(define (find-path x tree)
+  ; Implement me!
+  )
+
+#|
+(define (common-ancestor x y tree)
+  ; Implement me!
+  )
+|#

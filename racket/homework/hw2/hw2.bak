@@ -1,0 +1,50 @@
+#lang racket
+
+; SVG Generating Functions
+(define (circle x y r style)
+  (format "<circle cx=\"~a\" cy=\"~a\" r=\"~a\" style=\"~a\"/>" x y r style))
+
+(define (rect x y width height style)
+  (format "<rect x=\"~a\" y=\"~a\" width=\"~a\" height=\"~a\" style=\"~a\"/>" x y width height style))
+
+(define (line x1 y1 x2 y2 style)
+  (format "<line x1=\"~a\" y1=\"~a\" x2=\"~a\" y2=\"~a\" style=\"~a\"/>" x1 y1 x2 y2 style))
+
+; Example usage:
+(displayln (circle 50 40 20 "fill:blue"))
+(displayln (rect 10 20 30 40 "fill:blue"))
+(displayln (line 10 20 30 40 "stroke:black;stroke-width:5"))
+
+;; Example usage
+(define prg
+  '((define STYLE "fill:red;opacity:0.2;stroke:red;stroke-width:3")
+    (define (circles x r)
+      (when (> r 10)
+        (circle x 200 r STYLE)
+        (circles (+ x (floor (/ r 2))) (floor (/ r 2)))))))
+
+
+;this function executes program of SVGen language. Which has program made of commands and expressions 
+;inside prg, then expr is executed using the scope of prg
+;The program will generate SVG code
+(define (execute width height prg expr)
+    (define wrapper_of_content (string-append "<svg width=\"" (number->string width) "\" height=\"" (number->string height) "\">"))
+    (define wrapper_of_content_end "</svg>")
+
+    (define (scope to-match)
+        (for/or ((x (in-list prg))) ; Iterate over expr as a list
+            (match x
+                [(list 'define (list id) val) #:when (equal? id to-match)
+                (format "Defining %a with value %a" id val)]
+                [(list op args ...) #:when (equal? op to-match)
+                (format "%a operation with arguments: %a" op args)]
+                [(list 'define cid val) #:when (equal? cid to-match)
+                (format "Constant Definition: ~a with value ~a" cid val)]
+                [_ #f]
+            )
+        )
+    ) ; Continue looping if no match)
+    (scope 'STYLE)
+)
+
+(display (execute 400 400 prg '(circles 200 START))) 

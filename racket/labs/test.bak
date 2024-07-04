@@ -1,0 +1,7 @@
+#lang racket
+(define (permutate lst1 lst2 [acc '()])
+  (cond [(eq? lst1 lst2) acc]
+        [(empty? lst1) (cons lst2 acc)]
+        [else (permutate (cdr lst1) (cons (car lst1) lst2))]))
+
+(permutate '(2 3) '())

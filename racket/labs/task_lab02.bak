@@ -1,0 +1,25 @@
+#lang racket
+
+; Lab task 01 a
+(define (average-lst lst [acc 0] [sum 0])
+  (if (empty? lst)
+      (/ acc sum)
+      (average-lst (cdr lst) (+ (car lst) acc) (+ 1 sum))))
+
+#|
+(require racket/trace)
+(trace average-lst)
+|#
+
+(average-lst '(1 2 3))
+(average-lst '(1 5 55 5 3))
+
+; Lab task 01 b
+(define (sum lst [acc 0])
+  (if (empty? lst) acc
+      (sum (cdr lst) (+ (car lst) acc))))
+
+(define (avg-lst lst)
+  (/ (sum lst) (length lst)))
+
+(avg-lst '(1 5 55 5 3))

@@ -1,0 +1,19 @@
+#lang racket
+; Splitting matrix into blocks, code from: https://stackoverflow.com/questions/71594583/making-blocks-of-matrix-represented-by-list-in-racket
+(define (partition-by n lst)
+  (if (null? lst) lst
+      (cons (take lst n)
+            (partition-by n (drop lst n)))))
+
+(define (chunk lst w)
+  (map (lambda (group) (partition-by w group))
+       lst))
+
+(define (matrix->blocks matrix w h)
+  (apply append
+         (for/list ((row (partition-by w (chunk matrix w))))
+           (partition-by (* w h) (flatten (apply map list row))))))
+
+(define m '((1 2 3 4) (5 6 7 8) (9 10 11 12) (13 14 15 16)))
+
+(matrix->blocks m 2 2)

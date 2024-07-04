@@ -1,0 +1,17 @@
+#lang racket
+
+(define (add-line word words-lst line len ouput)
+  (let* ([])))
+
+(define (iter word words-lst max-width line len output)
+  (cond [(empty? wprds-lst) output]
+        [
+         (let* ([line-len (- (length line) 1)]
+                [word-len (length word)]
+                [new-len (+ word-len len)]
+                [width (+ new-len line-len)])
+           (if (> width max-width)
+               (pripoj line k polu)
+               (iter (car words-lst) (cdr words-lst) max-width (cons word line) new-len output) ))]))
+
+; (define (justify words-lst max-width))
